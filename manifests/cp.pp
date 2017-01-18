@@ -6,19 +6,26 @@ define s3::cp (
   $group,
   $mode,
   $dest_path,
-  $environment,
   $s3name = $name,
+  $notification = nodef,
 ){
   exec { "fetch ${name}":
     path        => ['/bin','/sbin','/usr/bin/','/usr/sbin/','/usr/local/bin'],
-    command     => "aws s3 cp s3://${bucket}/${source}/${s3name} ${dest_path}/${name}",
-    environment => $environment,
-    creates     => "${dest_path}/${name}",
+    command     => "aws s3 cp s3://${bucket}/${source}/${s3name} tmp${dest_path}",
+    creates     => "/tmp/${dest_path}",
   }->
-  file { "${dest_path}/${name}":
+  file { "/tmp${dest_path}":
     ensure => 'file',
     owner  => $owner,
     group  => $group,
     mode   => $mode,
+  }->
+  
+ file { "${dest_path}":
+    source => "/tmp${dest_path}",
+    owner  => $owner,
+    group  => $group,
+    mode   => $mode,
+    notify => $notification
   }
 }
